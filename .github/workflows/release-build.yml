@@ -1,0 +1,42 @@
+name: Build release plugin
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build plugin jar
+        run: mvn -B package
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EzTeleport-${{ github.ref_name }}
+          path: target/EzTeleport-*.jar
+          if-no-files-found: error
+
+      - name: Attach jar to GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/EzTeleport-*.jar
+          generate_release_notes: true
