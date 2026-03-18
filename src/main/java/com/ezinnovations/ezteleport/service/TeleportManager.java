@@ -6,6 +6,7 @@ import com.ezinnovations.ezteleport.model.TeleportCommandDefinition;
 import com.ezinnovations.ezteleport.util.LocationUtil;
 import com.ezinnovations.ezteleport.util.MessageUtil;
 import com.ezinnovations.ezteleport.util.SoundUtil;
+import com.ezinnovations.ezteleport.util.TeleportMessageKey;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -40,13 +41,13 @@ public final class TeleportManager {
 
         Location destination = definition.destination();
         if (destination.getWorld() == null) {
-            MessageUtil.sendMessage(player, definition.messages().invalidWorld());
+            MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);
             return;
         }
 
         long remaining = getRemainingCooldownSeconds(player.getUniqueId(), definition);
         if (remaining > 0L) {
-            MessageUtil.sendMessage(player, definition.messages().cooldown(), Map.of("time", Long.toString(remaining)));
+            MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.COOLDOWN, Map.of("time", Long.toString(remaining)));
             return;
         }
 
@@ -78,7 +79,12 @@ public final class TeleportManager {
                     }
 
                     if (countdownState.secondsRemaining() > 0) {
-                        MessageUtil.sendMessage(player, definition.messages().counting(), Map.of("time", Integer.toString(countdownState.secondsRemaining())));
+                        MessageUtil.sendConfiguredMessage(
+                                player,
+                                definition,
+                                TeleportMessageKey.COUNTING,
+                                Map.of("time", Integer.toString(countdownState.secondsRemaining()))
+                        );
                         SoundUtil.play(player, definition.sounds().tick());
                         countdownState.decrement();
                         return;
@@ -112,7 +118,7 @@ public final class TeleportManager {
 
         activeTeleport.task().cancel();
         cleanup(player.getUniqueId(), activeTeleport.task());
-        MessageUtil.sendMessage(player, activeTeleport.definition().messages().cancelledDamage());
+        MessageUtil.sendConfiguredMessage(player, activeTeleport.definition(), TeleportMessageKey.CANCELLED_DAMAGE);
         SoundUtil.play(player, activeTeleport.definition().sounds().cancelled());
     }
 
@@ -124,7 +130,7 @@ public final class TeleportManager {
 
         activeTeleport.task().cancel();
         cleanup(player.getUniqueId(), activeTeleport.task());
-        MessageUtil.sendMessage(player, activeTeleport.definition().messages().cancelledMove());
+        MessageUtil.sendConfiguredMessage(player, activeTeleport.definition(), TeleportMessageKey.CANCELLED_MOVE);
         SoundUtil.play(player, activeTeleport.definition().sounds().cancelled());
     }
 
@@ -168,15 +174,26 @@ public final class TeleportManager {
     private void performTeleport(Player player, TeleportCommandDefinition definition) {
         Location destination = definition.destination().clone();
         if (destination.getWorld() == null) {
-            MessageUtil.sendMessage(player, definition.messages().invalidWorld());
+            MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);
             return;
         }
 
         player.teleportAsync(destination).thenAccept(success -> {
-            if (success) {
-                MessageUtil.sendMessage(player, definition.messages().success());
-                SoundUtil.play(player, definition.sounds().success());
+            if (!success) {
+                return;
             }
+
+            player.getScheduler().run(
+                    plugin,
+                    scheduledTask -> {
+                        if (!player.isOnline()) {
+                            return;
+                        }
+                        MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.SUCCESS);
+                        SoundUtil.play(player, definition.sounds().success());
+                    },
+                    null
+            );
         });
     }
 

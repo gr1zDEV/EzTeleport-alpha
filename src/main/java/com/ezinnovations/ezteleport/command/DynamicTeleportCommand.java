@@ -4,6 +4,7 @@ import com.ezinnovations.ezteleport.EzTeleport;
 import com.ezinnovations.ezteleport.model.TeleportCommandDefinition;
 import com.ezinnovations.ezteleport.service.TeleportManager;
 import com.ezinnovations.ezteleport.util.MessageUtil;
+import com.ezinnovations.ezteleport.util.TeleportMessageKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
@@ -36,7 +37,7 @@ public final class DynamicTeleportCommand extends Command implements PluginIdent
         }
 
         if (!player.hasPermission(definition.permission())) {
-            MessageUtil.sendMessage(player, definition.messages().noPermission());
+            MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.NO_PERMISSION);
             return true;
         }
 
