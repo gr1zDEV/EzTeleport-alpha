@@ -1,0 +1,16 @@
+name: EzTeleport
+main: com.ezinnovations.ezteleport.EzTeleport
+version: ${project.version}
+api-version: "1.21"
+folia-supported: true
+
+commands:
+  ezteleport:
+    description: EzTeleport admin command
+    usage: /ezteleport reload
+    permission: ezteleport.admin
+
+permissions:
+  ezteleport.admin:
+    description: Allows reloading EzTeleport.
+    default: op

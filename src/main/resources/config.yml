@@ -1,0 +1,57 @@
+commands:
+  hub:
+    aliases:
+      - spawn
+    countdown: 5
+    cooldown: 30
+    destination:
+      world: world
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0
+      pitch: 0
+    cancel-on-move: true
+    cancel-on-damage: true
+    messages:
+      counting: "<aqua><bold>•</bold></aqua> <white>Teleporting in <aqua>{time}</aqua>s..."
+      cancelled-move: "<red><bold>✗</bold></red> <white>Cancelled! Don't move."
+      cancelled-damage: "<red><bold>✗</bold></red> <white>Cancelled! You took damage."
+      cooldown: "<red>Wait <yellow>{time}s</yellow> before using this again."
+      success: "<green>Teleporting..."
+      no-permission: "<red>You do not have permission."
+      invalid-world: "<red>This teleport destination is misconfigured."
+    sounds:
+      tick: BLOCK_NOTE_BLOCK_BASS
+      success: ENTITY_ENDERMAN_TELEPORT
+      cancelled: BLOCK_NOTE_BLOCK_BASS
+
+  afk:
+    aliases: []
+    countdown: 3
+    cooldown: 0
+    destination:
+      world: world
+      x: 128.0
+      y: 70.0
+      z: 128.0
+      yaw: 0
+      pitch: 0
+    cancel-on-move: false
+    cancel-on-damage: true
+    messages:
+      counting: "<gold>Going AFK in <yellow>{time}</yellow>s..."
+      cancelled-move: "<red>AFK cancelled! Don't move."
+      cancelled-damage: "<red>AFK cancelled! You took damage."
+      cooldown: ""
+      success: "<gray>You are now AFK."
+      no-permission: "<red>You do not have permission."
+      invalid-world: "<red>This teleport destination is misconfigured."
+    sounds:
+      tick: BLOCK_NOTE_BLOCK_BELL
+      success: BLOCK_NOTE_BLOCK_CHIME
+      cancelled: BLOCK_NOTE_BLOCK_BASS
+
+admin:
+  reload-message: "<green>EzTeleport config reloaded."
+  no-permission: "<red>You do not have permission."
