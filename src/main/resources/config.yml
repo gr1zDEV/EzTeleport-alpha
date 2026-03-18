@@ -21,6 +21,31 @@ commands:
       success: "<green>Teleporting..."
       no-permission: "<red>You do not have permission."
       invalid-world: "<red>This teleport destination is misconfigured."
+    actionbar-messages:
+      counting: "<aqua>Teleporting in <white>{time}</white>s..."
+      cancelled-move: ""
+      cancelled-damage: ""
+      cooldown: ""
+      success: ""
+      no-permission: ""
+      invalid-world: ""
+    message-delivery:
+      chat:
+        counting: true
+        cancelled-move: true
+        cancelled-damage: true
+        cooldown: true
+        success: true
+        no-permission: true
+        invalid-world: true
+      actionbar:
+        counting: true
+        cancelled-move: false
+        cancelled-damage: false
+        cooldown: false
+        success: false
+        no-permission: false
+        invalid-world: false
     sounds:
       tick: BLOCK_NOTE_BLOCK_BASS
       success: ENTITY_ENDERMAN_TELEPORT
@@ -47,6 +72,31 @@ commands:
       success: "<gray>You are now AFK."
       no-permission: "<red>You do not have permission."
       invalid-world: "<red>This teleport destination is misconfigured."
+    actionbar-messages:
+      counting: "<gold>Going AFK in <yellow>{time}</yellow>s..."
+      cancelled-move: ""
+      cancelled-damage: ""
+      cooldown: ""
+      success: ""
+      no-permission: ""
+      invalid-world: ""
+    message-delivery:
+      chat:
+        counting: true
+        cancelled-move: true
+        cancelled-damage: true
+        cooldown: true
+        success: true
+        no-permission: true
+        invalid-world: true
+      actionbar:
+        counting: true
+        cancelled-move: false
+        cancelled-damage: false
+        cooldown: false
+        success: false
+        no-permission: false
+        invalid-world: false
     sounds:
       tick: BLOCK_NOTE_BLOCK_BELL
       success: BLOCK_NOTE_BLOCK_CHIME

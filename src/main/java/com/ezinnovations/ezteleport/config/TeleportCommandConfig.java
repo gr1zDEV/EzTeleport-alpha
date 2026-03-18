@@ -3,6 +3,7 @@ package com.ezinnovations.ezteleport.config;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import com.ezinnovations.ezteleport.model.TeleportCommandDefinition;
+import com.ezinnovations.ezteleport.util.TeleportMessageKey;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -41,6 +42,8 @@ public final class TeleportCommandConfig {
 
             ConfigurationSection destinationSection = commandSection.getConfigurationSection("destination");
             ConfigurationSection messageSection = commandSection.getConfigurationSection("messages");
+            ConfigurationSection actionbarMessageSection = commandSection.getConfigurationSection("actionbar-messages");
+            ConfigurationSection messageDeliverySection = commandSection.getConfigurationSection("message-delivery");
             ConfigurationSection soundSection = commandSection.getConfigurationSection("sounds");
 
             if (destinationSection == null || messageSection == null || soundSection == null) {
@@ -78,15 +81,9 @@ public final class TeleportCommandConfig {
                     destination,
                     commandSection.getBoolean("cancel-on-move", true),
                     commandSection.getBoolean("cancel-on-damage", true),
-                    new TeleportCommandDefinition.Messages(
-                            messageSection.getString("counting", ""),
-                            messageSection.getString("cancelled-move", ""),
-                            messageSection.getString("cancelled-damage", ""),
-                            messageSection.getString("cooldown", ""),
-                            messageSection.getString("success", ""),
-                            messageSection.getString("no-permission", ""),
-                            messageSection.getString("invalid-world", "")
-                    ),
+                    loadMessages(messageSection),
+                    loadMessages(actionbarMessageSection),
+                    loadMessageDelivery(messageDeliverySection),
                     new TeleportCommandDefinition.Sounds(
                             soundSection.getString("tick", ""),
                             soundSection.getString("success", ""),
@@ -106,5 +103,49 @@ public final class TeleportCommandConfig {
 
     public String adminNoPermissionMessage(FileConfiguration config) {
         return config.getString("admin.no-permission", "<red>You do not have permission.");
+    }
+
+    private TeleportCommandDefinition.Messages loadMessages(ConfigurationSection section) {
+        if (section == null) {
+            return new TeleportCommandDefinition.Messages("", "", "", "", "", "", "");
+        }
+
+        return new TeleportCommandDefinition.Messages(
+                section.getString(TeleportMessageKey.COUNTING.configKey(), ""),
+                section.getString(TeleportMessageKey.CANCELLED_MOVE.configKey(), ""),
+                section.getString(TeleportMessageKey.CANCELLED_DAMAGE.configKey(), ""),
+                section.getString(TeleportMessageKey.COOLDOWN.configKey(), ""),
+                section.getString(TeleportMessageKey.SUCCESS.configKey(), ""),
+                section.getString(TeleportMessageKey.NO_PERMISSION.configKey(), ""),
+                section.getString(TeleportMessageKey.INVALID_WORLD.configKey(), "")
+        );
+    }
+
+    private TeleportCommandDefinition.MessageDelivery loadMessageDelivery(ConfigurationSection section) {
+        ConfigurationSection chatSection = section == null ? null : section.getConfigurationSection("chat");
+        ConfigurationSection actionbarSection = section == null ? null : section.getConfigurationSection("actionbar");
+
+        return new TeleportCommandDefinition.MessageDelivery(
+                loadChannel(chatSection, true, true),
+                loadChannel(actionbarSection, false, true)
+        );
+    }
+
+    private TeleportCommandDefinition.Channel loadChannel(ConfigurationSection section,
+                                                          boolean defaultValue,
+                                                          boolean defaultCountingValue) {
+        return new TeleportCommandDefinition.Channel(
+                getBoolean(section, TeleportMessageKey.COUNTING.configKey(), defaultCountingValue),
+                getBoolean(section, TeleportMessageKey.CANCELLED_MOVE.configKey(), defaultValue),
+                getBoolean(section, TeleportMessageKey.CANCELLED_DAMAGE.configKey(), defaultValue),
+                getBoolean(section, TeleportMessageKey.COOLDOWN.configKey(), defaultValue),
+                getBoolean(section, TeleportMessageKey.SUCCESS.configKey(), defaultValue),
+                getBoolean(section, TeleportMessageKey.NO_PERMISSION.configKey(), defaultValue),
+                getBoolean(section, TeleportMessageKey.INVALID_WORLD.configKey(), defaultValue)
+        );
+    }
+
+    private boolean getBoolean(ConfigurationSection section, String key, boolean fallback) {
+        return section == null ? fallback : section.getBoolean(key, fallback);
     }
 }
