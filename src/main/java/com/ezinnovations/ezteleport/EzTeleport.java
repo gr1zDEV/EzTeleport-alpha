@@ -47,6 +47,10 @@ public final class EzTeleport extends JavaPlugin {
         return teleportConfigManager;
     }
 
+    public TeleportManager getTeleportManager() {
+        return teleportManager;
+    }
+
     private void registerStaticCommand() {
         PluginCommand command = getCommand("ezteleport");
         if (command == null) {
