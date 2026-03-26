@@ -65,7 +65,7 @@ public final class CommandRegistrationService {
             return;
         }
 
-        Permission permission = new Permission(permissionNode, PermissionDefault.OP);
+        Permission permission = new Permission(permissionNode, PermissionDefault.TRUE);
         plugin.getServer().getPluginManager().addPermission(permission);
         registeredPermissions.put(permissionNode, permission);
     }
