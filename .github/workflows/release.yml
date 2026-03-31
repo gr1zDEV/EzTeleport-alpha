@@ -1,32 +1,112 @@
-name: Release
+name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
   release:
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Temurin Java 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
-      - name: Build with Maven
-        run: mvn package -B
+      - name: Compute next version and bump pom.xml
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_tag="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
+
+          if [[ -n "$latest_tag" && "$latest_tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+            next_version="${major}.${minor}.$((patch + 1))"
+          else
+            current_version="$(python - <<'PY'
+import xml.etree.ElementTree as ET
+root = ET.parse('pom.xml').getroot()
+ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+print(root.find('m:version', ns).text.strip())
+PY
+)"
+            if [[ "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              major="${BASH_REMATCH[1]}"
+              minor="${BASH_REMATCH[2]}"
+              patch="${BASH_REMATCH[3]}"
+              next_version="${major}.${minor}.$((patch + 1))"
+            else
+              echo "Unable to compute next version from tag '$latest_tag' and pom version '$current_version'"
+              exit 1
+            fi
+          fi
+
+          python - "$next_version" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+next_version = sys.argv[1]
+path = 'pom.xml'
+ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+tree = ET.parse(path)
+root = tree.getroot()
+ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+version = root.find('m:version', ns)
+if version is None:
+    raise SystemExit('Could not find project version in pom.xml')
+version.text = next_version
+tree.write(path, encoding='utf-8', xml_declaration=False)
+PY
+
+          echo "version=$next_version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$next_version" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- pom.xml; then
+            echo "No pom.xml change detected."
+          else
+            git add pom.xml
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip release]"
+            git push
+          fi
+
+      - name: Build jar
+        run: mvn -B clean package
+
+      - name: Create git tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/EzTeleport-*.jar
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: EzTeleport ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: target/EzTeleport-${{ steps.version.outputs.version }}.jar
