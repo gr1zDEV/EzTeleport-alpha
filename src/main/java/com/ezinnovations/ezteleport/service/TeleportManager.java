@@ -12,18 +12,23 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public final class TeleportManager {
     private final EzTeleport plugin;
+    private final Logger logger;
     private final Map<UUID, ActiveTeleport> activeTeleports = new ConcurrentHashMap<>();
     private final Map<String, Map<UUID, Long>> cooldowns = new ConcurrentHashMap<>();
+    private final Map<String, TeleportMetricCounter> metricsByCommand = new ConcurrentHashMap<>();
 
     public TeleportManager(EzTeleport plugin) {
         this.plugin = plugin;
+        this.logger = plugin.getLogger();
     }
 
     public void cancelAllActiveTeleports() {
@@ -38,16 +43,19 @@ public final class TeleportManager {
 
     public void beginTeleport(Player player, TeleportCommandDefinition definition) {
         cancelActiveTeleport(player.getUniqueId());
+        recordAttempt(definition.name());
 
         Location destination = definition.destination();
         if (!definition.usesDestinationCommand() && destination.getWorld() == null) {
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);
+            recordFailure(definition.name(), "invalid_world");
             return;
         }
 
         long remaining = getRemainingCooldownSeconds(player.getUniqueId(), definition);
         if (remaining > 0L) {
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.COOLDOWN, Map.of("time", Long.toString(remaining)));
+            recordFailure(definition.name(), "cooldown_active");
             return;
         }
 
@@ -99,6 +107,7 @@ public final class TeleportManager {
         );
 
         if (task == null) {
+            recordFailure(definition.name(), "scheduler_unavailable");
             return;
         }
 
@@ -120,6 +129,7 @@ public final class TeleportManager {
         cleanup(player.getUniqueId(), activeTeleport.task());
         MessageUtil.sendConfiguredMessage(player, activeTeleport.definition(), TeleportMessageKey.CANCELLED_DAMAGE);
         SoundUtil.play(player, activeTeleport.definition().sounds().cancelled());
+        recordCancelled(activeTeleport.commandName(), "damage");
     }
 
     public void cancelForMovement(Player player) {
@@ -132,6 +142,7 @@ public final class TeleportManager {
         cleanup(player.getUniqueId(), activeTeleport.task());
         MessageUtil.sendConfiguredMessage(player, activeTeleport.definition(), TeleportMessageKey.CANCELLED_MOVE);
         SoundUtil.play(player, activeTeleport.definition().sounds().cancelled());
+        recordCancelled(activeTeleport.commandName(), "movement");
     }
 
     public void cancelActiveTeleport(UUID playerId) {
@@ -180,22 +191,26 @@ public final class TeleportManager {
 
             boolean executed = player.performCommand(command);
             if (!executed) {
+                recordFailure(definition.name(), "destination_command_failed");
                 return;
             }
 
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.SUCCESS);
             SoundUtil.play(player, definition.sounds().success());
+            recordSuccess(definition.name());
             return;
         }
 
         Location destination = definition.destination().clone();
         if (destination.getWorld() == null) {
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);
+            recordFailure(definition.name(), "invalid_world");
             return;
         }
 
         player.teleportAsync(destination).thenAccept(success -> {
             if (!success) {
+                recordFailure(definition.name(), "teleport_async_failed");
                 return;
             }
 
@@ -207,6 +222,7 @@ public final class TeleportManager {
                         }
                         MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.SUCCESS);
                         SoundUtil.play(player, definition.sounds().success());
+                        recordSuccess(definition.name());
                     },
                     null
             );
@@ -216,6 +232,66 @@ public final class TeleportManager {
     public boolean handleConsoleExecution(CommandSender sender) {
         sender.sendMessage("Only players can use teleport commands.");
         return true;
+    }
+
+    public Map<String, TeleportMetrics> metricsSnapshot() {
+        Map<String, TeleportMetrics> snapshot = new LinkedHashMap<>();
+        metricsByCommand.forEach((command, counter) -> snapshot.put(command, counter.snapshot()));
+        return snapshot;
+    }
+
+    private void recordAttempt(String commandName) {
+        TeleportMetricCounter counter = metricsByCommand.computeIfAbsent(commandName, ignored -> new TeleportMetricCounter());
+        long attempts = counter.incrementAttempts();
+        debug("teleport_attempt", commandName, "attempts=" + attempts);
+    }
+
+    private void recordSuccess(String commandName) {
+        TeleportMetricCounter counter = metricsByCommand.computeIfAbsent(commandName, ignored -> new TeleportMetricCounter());
+        long successes = counter.incrementSuccesses();
+        debug("teleport_success", commandName, "successes=" + successes);
+    }
+
+    private void recordCancelled(String commandName, String reason) {
+        TeleportMetricCounter counter = metricsByCommand.computeIfAbsent(commandName, ignored -> new TeleportMetricCounter());
+        long cancelled = counter.incrementCancelled();
+        debug("teleport_cancelled", commandName, "reason=" + reason + " cancelled=" + cancelled);
+    }
+
+    private void recordFailure(String commandName, String reason) {
+        debug("teleport_failed", commandName, "reason=" + reason);
+    }
+
+    private void debug(String event, String commandName, String details) {
+        if (!plugin.getTeleportConfigManager().isDebugEnabled()) {
+            return;
+        }
+        logger.info("[EzTeleportDebug] event=" + event + " command=" + commandName + " " + details);
+    }
+
+    public record TeleportMetrics(long attempts, long successes, long cancelled) {
+    }
+
+    private static final class TeleportMetricCounter {
+        private long attempts;
+        private long successes;
+        private long cancelled;
+
+        private synchronized long incrementAttempts() {
+            return ++attempts;
+        }
+
+        private synchronized long incrementSuccesses() {
+            return ++successes;
+        }
+
+        private synchronized long incrementCancelled() {
+            return ++cancelled;
+        }
+
+        private synchronized TeleportMetrics snapshot() {
+            return new TeleportMetrics(attempts, successes, cancelled);
+        }
     }
 
     private static final class CountdownState {

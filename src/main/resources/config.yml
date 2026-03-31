@@ -109,3 +109,4 @@ commands:
 admin:
   reload-message: "<green>EzTeleport config reloaded."
   no-permission: "<red>You do not have permission."
+  debug: false
