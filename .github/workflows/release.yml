@@ -59,7 +59,7 @@ jobs:
             patch="${BASH_REMATCH[3]}"
             next_version="${major}.${minor}.$((patch + 1))"
           else
-            current_version="$(python3 -c \"import xml.etree.ElementTree as ET; root=ET.parse('pom.xml').getroot(); ns={'m':'http://maven.apache.org/POM/4.0.0'}; print(root.find('m:version', ns).text.strip())\")"
+            current_version="$(python3 -c "import xml.etree.ElementTree as ET; root=ET.parse('pom.xml').getroot(); ns={'m':'http://maven.apache.org/POM/4.0.0'}; print(root.find('m:version', ns).text.strip())")"
             if [[ "$current_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
               major="${BASH_REMATCH[1]}"
               minor="${BASH_REMATCH[2]}"
@@ -71,7 +71,7 @@ jobs:
             fi
           fi
 
-          python3 -c \"import sys, xml.etree.ElementTree as ET; next_version=sys.argv[1]; path='pom.xml'; ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0'); tree=ET.parse(path); root=tree.getroot(); ns={'m':'http://maven.apache.org/POM/4.0.0'}; version=root.find('m:version', ns); (_ for _ in ()).throw(SystemExit('Could not find project version in pom.xml')) if version is None else None; version.text=next_version; tree.write(path, encoding='utf-8', xml_declaration=False)\" \"$next_version\"
+          python3 -c "import sys, xml.etree.ElementTree as ET; next_version=sys.argv[1]; path='pom.xml'; ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0'); tree=ET.parse(path); root=tree.getroot(); ns={'m':'http://maven.apache.org/POM/4.0.0'}; version=root.find('m:version', ns); (_ for _ in ()).throw(SystemExit('Could not find project version in pom.xml')) if version is None else None; version.text=next_version; tree.write(path, encoding='utf-8', xml_declaration=False)" "$next_version"
 
           echo "version=$next_version" >> "$GITHUB_OUTPUT"
           echo "tag=v$next_version" >> "$GITHUB_OUTPUT"
