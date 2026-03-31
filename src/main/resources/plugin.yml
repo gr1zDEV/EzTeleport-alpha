@@ -8,7 +8,7 @@ softdepend: [BetterRTP]
 commands:
   ezteleport:
     description: EzTeleport admin command
-    usage: /ezteleport reload
+    usage: /ezteleport reload|metrics [command]|<player> <teleport>
     permission: ezteleport.admin
 
 permissions:

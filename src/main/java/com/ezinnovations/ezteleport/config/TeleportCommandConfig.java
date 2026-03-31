@@ -107,6 +107,10 @@ public final class TeleportCommandConfig {
         return config.getString("admin.no-permission", "<red>You do not have permission.");
     }
 
+    public boolean adminDebugEnabled(FileConfiguration config) {
+        return config.getBoolean("admin.debug", false);
+    }
+
     private TeleportCommandDefinition.Messages loadMessages(ConfigurationSection section) {
         if (section == null) {
             return new TeleportCommandDefinition.Messages("", "", "", "", "", "", "");

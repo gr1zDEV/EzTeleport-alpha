@@ -14,6 +14,7 @@ public final class TeleportConfigManager {
     private Map<String, TeleportCommandDefinition> definitions = Collections.emptyMap();
     private String adminReloadMessage = "<green>EzTeleport config reloaded.";
     private String adminNoPermissionMessage = "<red>You do not have permission.";
+    private boolean debugEnabled;
 
     public TeleportConfigManager(EzTeleport plugin) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
@@ -25,6 +26,7 @@ public final class TeleportConfigManager {
         this.definitions = Collections.unmodifiableMap(new LinkedHashMap<>(commandConfig.loadCommands(plugin.getConfig())));
         this.adminReloadMessage = commandConfig.adminReloadMessage(plugin.getConfig());
         this.adminNoPermissionMessage = commandConfig.adminNoPermissionMessage(plugin.getConfig());
+        this.debugEnabled = commandConfig.adminDebugEnabled(plugin.getConfig());
     }
 
     public Map<String, TeleportCommandDefinition> getDefinitions() {
@@ -37,5 +39,9 @@ public final class TeleportConfigManager {
 
     public String getAdminNoPermissionMessage() {
         return adminNoPermissionMessage;
+    }
+
+    public boolean isDebugEnabled() {
+        return debugEnabled;
     }
 }

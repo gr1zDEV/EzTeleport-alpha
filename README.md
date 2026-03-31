@@ -14,7 +14,10 @@ EzTeleport is a lightweight **Paper/Folia** plugin that lets you define custom t
 - Per-message delivery toggles (chat/actionbar)
 - Configurable sounds for tick/success/cancel
 - `/ezteleport reload` admin command
+- `/ezteleport metrics [command]` admin metrics command
 - Folia supported
+- Optional debug mode with structured operational logs
+- In-memory per-command metrics hooks (attempted/succeeded/cancelled)
 
 ## Requirements
 
@@ -43,13 +46,16 @@ Output jar:
 
 ## Commands & Permissions
 
-### Command
+### Commands
 
 - `/ezteleport reload` — Reloads the plugin configuration.
+- `/ezteleport metrics [command]` — Shows in-memory teleport counters for all commands or one command.
+- `/ezteleport <player> <teleport>` — Starts a configured teleport for an online player.
 
 ### Permission
 
 - `ezteleport.admin` (default: op)
+- `ezteleport.<command>` (default: true)
 
 ## Configuration Overview
 
@@ -75,6 +81,10 @@ commands:
     actionbar-messages: ...
     message-delivery: ...
     sounds: ...
+admin:
+  reload-message: "<green>EzTeleport config reloaded."
+  no-permission: "<red>You do not have permission."
+  debug: false
 ```
 
 ### `destination.command` vs coordinates
@@ -85,6 +95,14 @@ commands:
 ### Message placeholders
 
 - `{time}` — Remaining seconds for countdown/cooldown messaging.
+
+### Observability
+
+- Set `admin.debug: true` to enable structured debug logs for:
+  - command/permission registration events
+  - teleport cancel reasons
+  - teleport failure reasons
+- Metrics are stored in memory per command and exposed via `/ezteleport metrics`.
 
 ## Example commands included by default
 

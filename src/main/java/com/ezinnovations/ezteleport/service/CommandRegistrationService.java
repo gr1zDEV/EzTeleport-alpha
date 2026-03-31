@@ -16,10 +16,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public final class CommandRegistrationService {
     private final EzTeleport plugin;
     private final TeleportManager teleportManager;
+    private final Logger logger;
     private final CommandMap commandMap;
     private final Map<String, Command> knownCommands;
     private final List<DynamicTeleportCommand> registeredCommands = new ArrayList<>();
@@ -28,6 +30,7 @@ public final class CommandRegistrationService {
     public CommandRegistrationService(EzTeleport plugin, TeleportManager teleportManager) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.teleportManager = Objects.requireNonNull(teleportManager, "teleportManager");
+        this.logger = plugin.getLogger();
         this.commandMap = resolveCommandMap();
         this.knownCommands = resolveKnownCommands(commandMap);
     }
@@ -35,6 +38,7 @@ public final class CommandRegistrationService {
     public void registerCommands(Map<String, TeleportCommandDefinition> definitions) {
         unregisterDynamicCommands();
         definitions.values().forEach(this::registerCommand);
+        debug("command_registration_complete", "count=" + registeredCommands.size());
     }
 
     public void unregisterDynamicCommands() {
@@ -51,6 +55,7 @@ public final class CommandRegistrationService {
 
         registeredPermissions.values().forEach(permission -> plugin.getServer().getPluginManager().removePermission(permission));
         registeredPermissions.clear();
+        debug("commands_unregistered", "count=all");
     }
 
     private void registerCommand(TeleportCommandDefinition definition) {
@@ -58,6 +63,7 @@ public final class CommandRegistrationService {
         registerPermission(definition.permission());
         commandMap.register(plugin.getName().toLowerCase(Locale.ROOT), command);
         registeredCommands.add(command);
+        debug("command_registered", "name=" + definition.name() + " aliases=" + String.join(",", definition.aliases()));
     }
 
     private void registerPermission(String permissionNode) {
@@ -68,6 +74,7 @@ public final class CommandRegistrationService {
         Permission permission = new Permission(permissionNode, PermissionDefault.TRUE);
         plugin.getServer().getPluginManager().addPermission(permission);
         registeredPermissions.put(permissionNode, permission);
+        debug("permission_registered", "node=" + permissionNode);
     }
 
     @SuppressWarnings("unchecked")
@@ -108,5 +115,12 @@ public final class CommandRegistrationService {
         if (mapped == command) {
             knownCommands.remove(label);
         }
+    }
+
+    private void debug(String event, String details) {
+        if (!plugin.getTeleportConfigManager().isDebugEnabled()) {
+            return;
+        }
+        logger.info("[EzTeleportDebug] event=" + event + " " + details);
     }
 }
