@@ -5,6 +5,9 @@ commands:
     countdown: 5
     cooldown: 30
     destination:
+      # Optional: run a command as the player instead of using x/y/z teleport.
+      # Example: "betterrtp world world"
+      command: ""
       world: world
       x: 0.5
       y: 64.0
@@ -56,6 +59,7 @@ commands:
     countdown: 3
     cooldown: 0
     destination:
+      command: ""
       world: world
       x: 128.0
       y: 70.0

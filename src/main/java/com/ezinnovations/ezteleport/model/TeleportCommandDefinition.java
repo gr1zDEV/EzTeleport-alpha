@@ -11,6 +11,7 @@ public record TeleportCommandDefinition(
         int countdownSeconds,
         int cooldownSeconds,
         Location destination,
+        String destinationCommand,
         boolean cancelOnMove,
         boolean cancelOnDamage,
         Messages messages,
@@ -22,6 +23,7 @@ public record TeleportCommandDefinition(
         Objects.requireNonNull(name, "name");
         aliases = List.copyOf(aliases);
         Objects.requireNonNull(destination, "destination");
+        destinationCommand = destinationCommand == null ? "" : destinationCommand.trim();
         Objects.requireNonNull(messages, "messages");
         Objects.requireNonNull(actionbarMessages, "actionbarMessages");
         Objects.requireNonNull(messageDelivery, "messageDelivery");
@@ -30,6 +32,10 @@ public record TeleportCommandDefinition(
 
     public String permission() {
         return "ezteleport." + name.toLowerCase();
+    }
+
+    public boolean usesDestinationCommand() {
+        return !destinationCommand.isBlank();
     }
 
     public record Messages(
