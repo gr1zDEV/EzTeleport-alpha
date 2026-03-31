@@ -40,7 +40,7 @@ public final class TeleportManager {
         cancelActiveTeleport(player.getUniqueId());
 
         Location destination = definition.destination();
-        if (destination.getWorld() == null) {
+        if (!definition.usesDestinationCommand() && destination.getWorld() == null) {
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);
             return;
         }
@@ -172,6 +172,22 @@ public final class TeleportManager {
     }
 
     private void performTeleport(Player player, TeleportCommandDefinition definition) {
+        if (definition.usesDestinationCommand()) {
+            String command = definition.destinationCommand();
+            if (command.startsWith("/")) {
+                command = command.substring(1);
+            }
+
+            boolean executed = player.performCommand(command);
+            if (!executed) {
+                return;
+            }
+
+            MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.SUCCESS);
+            SoundUtil.play(player, definition.sounds().success());
+            return;
+        }
+
         Location destination = definition.destination().clone();
         if (destination.getWorld() == null) {
             MessageUtil.sendConfiguredMessage(player, definition, TeleportMessageKey.INVALID_WORLD);

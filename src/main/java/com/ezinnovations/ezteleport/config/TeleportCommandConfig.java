@@ -52,8 +52,9 @@ public final class TeleportCommandConfig {
             }
 
             String worldName = destinationSection.getString("world", "");
+            String destinationCommand = destinationSection.getString("command", "").trim();
             World world = worldName.isBlank() ? null : server.getWorld(worldName);
-            if (world == null) {
+            if (destinationCommand.isBlank() && world == null) {
                 logger.warning("Command '" + rawName + "' references unavailable world '" + worldName + "'. It will remain loaded but fail gracefully at runtime.");
             }
 
@@ -79,6 +80,7 @@ public final class TeleportCommandConfig {
                     Math.max(0, commandSection.getInt("countdown", 0)),
                     Math.max(0, commandSection.getInt("cooldown", 0)),
                     destination,
+                    destinationCommand,
                     commandSection.getBoolean("cancel-on-move", true),
                     commandSection.getBoolean("cancel-on-damage", true),
                     loadMessages(messageSection),
