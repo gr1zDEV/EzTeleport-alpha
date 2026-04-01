@@ -19,6 +19,10 @@ EzTeleport is a lightweight **Paper/Folia** plugin that lets you define custom t
 - Optional debug mode with structured operational logs
 - In-memory per-command metrics hooks (attempted/succeeded/cancelled)
 
+## Documentation
+
+For production-ready server-owner and player-facing docs, see [`docs/`](./docs/README.md).
+
 ## Requirements
 
 - Java **21**
