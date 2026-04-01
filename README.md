@@ -21,7 +21,7 @@ EzTeleport is a lightweight **Paper/Folia** plugin that lets you define custom t
 
 ## Documentation
 
-For production-ready server-owner and player-facing docs, see [`docs/`](./docs/README.md).
+For production-ready server-owner and player-facing docs, see [`docs/`](./docs/index.md).
 
 ## Requirements
 
