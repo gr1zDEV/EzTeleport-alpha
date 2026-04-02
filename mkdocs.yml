@@ -13,12 +13,14 @@ theme:
     - navigation.top
 
 nav:
-  - Home: index.md
-  - Installation & Upgrade: installation-and-upgrades.md
-  - Command Configuration: command-configuration.md
-  - Operations Runbook: operations-runbook.md
-  - Player Commands: player-commands.md
-  - Troubleshooting: troubleshooting.md
+  - Getting Started:
+      - Installing EzTeleport: installation-and-upgrades.md
+      - Supported Plugins: supported-plugins.md
+  - Configuration: command-configuration.md
+  - Commands & Permissions: commands-and-permissions.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
+
 markdown_extensions:
   - admonition
   - toc:
