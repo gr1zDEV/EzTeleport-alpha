@@ -1,7 +1,7 @@
 package com.ezinnovations.ezteleport.service;
 
 import com.ezinnovations.ezteleport.EzTeleport;
-import com.ezinnovations.ezteleport.command.DynamicTeleportCommand;
+import com.ezinnovations.ezteleport.command.GroupedTeleportCommand;
 import com.ezinnovations.ezteleport.model.TeleportCommandDefinition;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -12,10 +12,13 @@ import org.bukkit.permissions.PermissionDefault;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public final class CommandRegistrationService {
@@ -24,7 +27,7 @@ public final class CommandRegistrationService {
     private final Logger logger;
     private final CommandMap commandMap;
     private final Map<String, Command> knownCommands;
-    private final List<DynamicTeleportCommand> registeredCommands = new ArrayList<>();
+    private final List<Command> registeredCommands = new ArrayList<>();
     private final Map<String, Permission> registeredPermissions = new HashMap<>();
 
     public CommandRegistrationService(EzTeleport plugin, TeleportManager teleportManager) {
@@ -37,12 +40,30 @@ public final class CommandRegistrationService {
 
     public void registerCommands(Map<String, TeleportCommandDefinition> definitions) {
         unregisterDynamicCommands();
-        definitions.values().forEach(this::registerCommand);
+
+        Map<String, List<GroupedTeleportCommand.Route>> routesByRoot = new LinkedHashMap<>();
+        Set<String> registeredRouteKeys = new LinkedHashSet<>();
+
+        definitions.values().forEach(definition -> {
+            registerPermission(definition.permission());
+            addRoute(definition.commandPathTokens(), definition, routesByRoot, registeredRouteKeys);
+            definition.aliasPathTokens().forEach(path -> addRoute(path, definition, routesByRoot, registeredRouteKeys));
+        });
+
+        for (Map.Entry<String, List<GroupedTeleportCommand.Route>> entry : routesByRoot.entrySet()) {
+            String root = entry.getKey();
+            Map<String, List<GroupedTeleportCommand.Route>> perCommandRoutes = Map.of(root, entry.getValue());
+            GroupedTeleportCommand command = new GroupedTeleportCommand(plugin, teleportManager, root, List.of(), perCommandRoutes);
+            commandMap.register(plugin.getName().toLowerCase(Locale.ROOT), command);
+            registeredCommands.add(command);
+            debug("command_registered", "name=" + root + " aliases=");
+        }
+
         debug("command_registration_complete", "count=" + registeredCommands.size());
     }
 
     public void unregisterDynamicCommands() {
-        for (DynamicTeleportCommand command : registeredCommands) {
+        for (Command command : registeredCommands) {
             command.unregister(commandMap);
             removeKnownCommand(command.getName(), command);
             removeKnownCommand(plugin.getName().toLowerCase(Locale.ROOT) + ":" + command.getName(), command);
@@ -58,12 +79,25 @@ public final class CommandRegistrationService {
         debug("commands_unregistered", "count=all");
     }
 
-    private void registerCommand(TeleportCommandDefinition definition) {
-        DynamicTeleportCommand command = new DynamicTeleportCommand(plugin, teleportManager, definition);
-        registerPermission(definition.permission());
-        commandMap.register(plugin.getName().toLowerCase(Locale.ROOT), command);
-        registeredCommands.add(command);
-        debug("command_registered", "name=" + definition.name() + " aliases=" + String.join(",", definition.aliases()));
+    private void addRoute(List<String> path,
+                          TeleportCommandDefinition definition,
+                          Map<String, List<GroupedTeleportCommand.Route>> routesByRoot,
+                          Set<String> registeredRouteKeys) {
+        if (path.isEmpty()) {
+            return;
+        }
+
+        String root = path.get(0);
+        List<String> remainder = path.subList(1, path.size());
+        String routeKey = root + " " + String.join(" ", remainder);
+
+        if (!registeredRouteKeys.add(routeKey)) {
+            logger.warning("Duplicate teleport route '/" + routeKey + "' detected. Keeping the first configured route.");
+            return;
+        }
+
+        routesByRoot.computeIfAbsent(root, ignored -> new ArrayList<>())
+                .add(new GroupedTeleportCommand.Route(remainder, definition));
     }
 
     private void registerPermission(String permissionNode) {
@@ -110,7 +144,7 @@ public final class CommandRegistrationService {
         throw new NoSuchFieldException(name);
     }
 
-    private void removeKnownCommand(String label, DynamicTeleportCommand command) {
+    private void removeKnownCommand(String label, Command command) {
         Command mapped = knownCommands.get(label);
         if (mapped == command) {
             knownCommands.remove(label);

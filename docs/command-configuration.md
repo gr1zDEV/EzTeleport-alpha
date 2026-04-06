@@ -30,6 +30,29 @@ admin:
   debug: false
 ```
 
+
+## Multi-word command paths
+
+You can now define command routes with spaces by quoting the command key in YAML.
+
+```yaml
+commands:
+  "warp store":
+    aliases: ["warp shop"]
+    countdown: 3
+    cooldown: 15
+    destination:
+      command: ""
+      world: world
+      x: 100
+      y: 70
+      z: -20
+      yaw: 90
+      pitch: 0
+```
+
+This route is executed with `/warp store`. Single-word keys like `hub` still work exactly as before.
+
 ## Destination modes
 
 ### 1) Coordinate teleport
