@@ -54,6 +54,59 @@ commands:
       success: ENTITY_ENDERMAN_TELEPORT
       cancelled: BLOCK_NOTE_BLOCK_BASS
 
+  "warp store":
+    aliases:
+      - "warp shop"
+    countdown: 3
+    cooldown: 15
+    destination:
+      command: ""
+      world: world
+      x: 100.0
+      y: 70.0
+      z: -20.0
+      yaw: 90
+      pitch: 0
+    cancel-on-move: true
+    cancel-on-damage: true
+    messages:
+      counting: "<light_purple>Warping to store in <white>{time}</white>s..."
+      cancelled-move: "<red>Warp cancelled! Don't move."
+      cancelled-damage: "<red>Warp cancelled! You took damage."
+      cooldown: "<red>Wait <yellow>{time}s</yellow> before warping again."
+      success: "<green>Welcome to the store!"
+      no-permission: "<red>You do not have permission."
+      invalid-world: "<red>This teleport destination is misconfigured."
+    actionbar-messages:
+      counting: "<light_purple>Warping in <white>{time}</white>s..."
+      cancelled-move: ""
+      cancelled-damage: ""
+      cooldown: ""
+      success: ""
+      no-permission: ""
+      invalid-world: ""
+    message-delivery:
+      chat:
+        counting: true
+        cancelled-move: true
+        cancelled-damage: true
+        cooldown: true
+        success: true
+        no-permission: true
+        invalid-world: true
+      actionbar:
+        counting: true
+        cancelled-move: false
+        cancelled-damage: false
+        cooldown: false
+        success: false
+        no-permission: false
+        invalid-world: false
+    sounds:
+      tick: BLOCK_NOTE_BLOCK_BELL
+      success: ENTITY_PLAYER_LEVELUP
+      cancelled: BLOCK_NOTE_BLOCK_BASS
+
   afk:
     aliases: []
     countdown: 3
