@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EzDonutStore Docs</title>
+  <meta name="description" content="GitBook-style documentation for the EzDonutStore Paper/Folia plugin." />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-block">
+          <div class="eyebrow">Docs</div>
+          <div class="brand-title">EzDonutStore</div>
+        </div>
+        <div class="kbd">⌘</div>
+      </div>
+
+      <div class="search-wrap">
+        <input class="search" id="searchInput" placeholder="Search pages..." aria-label="Search documentation pages" />
+      </div>
+
+      <div class="sidebar-scroll" id="sidebarScroll"></div>
+
+      <div class="sidebar-footer">
+        <div class="support-card">
+          <strong>Need more help?</strong>
+          <p>Open an issue on GitHub if you need help.</p>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle" aria-label="Open navigation">☰</button>
+          <div class="topbar-title-wrap">
+            <div class="eyebrow">EzDonutStore Docs</div>
+            <div class="topbar-title" id="topbarTitle">EzDonutStore Docs</div>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <a class="btn" href="https://github.com/EzDonutSMP/EzDonutStore" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="btn btn-primary" href="#/index">Install</a>
+        </div>
+      </header>
+
+      <div class="layout">
+        <main class="content" id="contentRoot"></main>
+
+        <aside class="toc">
+          <div class="toc-inner">
+            <div class="toc-title">On this page</div>
+            <div id="tocLinks"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/docs-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
