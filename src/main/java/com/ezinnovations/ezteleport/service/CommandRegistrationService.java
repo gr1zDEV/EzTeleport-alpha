@@ -60,6 +60,7 @@ public final class CommandRegistrationService {
         }
 
         debug("command_registration_complete", "count=" + registeredCommands.size());
+        syncCommands();
     }
 
     public void unregisterDynamicCommands() {
@@ -77,6 +78,15 @@ public final class CommandRegistrationService {
         registeredPermissions.values().forEach(permission -> plugin.getServer().getPluginManager().removePermission(permission));
         registeredPermissions.clear();
         debug("commands_unregistered", "count=all");
+    }
+
+    public void syncCommands() {
+        try {
+            Bukkit.getServer().getClass().getMethod("syncCommands").invoke(Bukkit.getServer());
+            debug("commands_synced", "status=success");
+        } catch (ReflectiveOperationException exception) {
+            debug("commands_synced", "status=unsupported");
+        }
     }
 
     private void addRoute(List<String> path,
